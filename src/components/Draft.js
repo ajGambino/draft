@@ -1,9 +1,17 @@
-import React from 'react'
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 const Draft = () => {
-    return (
-        <div>Draft</div>
-    )
-}
+    const location = useLocation();
+    const { contestId, contestName } = location.state || {};
 
-export default Draft
+    return (
+        <div>
+            <h1>Welcome to the Draft</h1>
+            <h2>Contest ID: {contestId}</h2>
+            <h2>Contest Name: {contestName}</h2>
+        </div>
+    );
+};
+
+export default Draft;

@@ -15,7 +15,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/live" element={<Live />} />
-        <Route path="/draft" element={<Draft />} />
+        <Route path="/draft/:contestID" element={<Draft />} />
         <Route path="/lobby" element={<Lobby />} />
       </Routes>
     </Router>

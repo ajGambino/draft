@@ -1,18 +1,16 @@
-// register button, onclick add 1 to players field in that document ID in contests collection
-//when players === 6, disable register button, and redirect those 6 users to the draft page
-// do not let players register more than once
-// render each document in contests collection as [name] | [players]'/6' | register button
 import React, { useState, useEffect } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Lobby = () => {
+    const navigate = useNavigate();
     const [contests, setContests] = useState([]);
     const [message, setMessage] = useState('');
+    const [isRegistered, setIsRegistered] = useState(false);
 
     useEffect(() => {
-        // Fetch contests data from Firestore
         const db = firebase.firestore();
         const unsubscribe = db.collection('contests').onSnapshot((snapshot) => {
             const contestsData = snapshot.docs.map((doc) => ({
@@ -20,13 +18,23 @@ const Lobby = () => {
                 ...doc.data(),
             }));
             setContests(contestsData);
+
+            // Check if the current user is registered for any of the contests
+            const user = firebase.auth().currentUser;
+            if (user) {
+                const isUserRegistered = contestsData.some((contest) =>
+                    contest.registeredUsers.includes(user.uid)
+                );
+                setIsRegistered(isUserRegistered);
+            }
         });
 
         return () => unsubscribe();
     }, []);
 
-    const handleRegister = (contestId, currentPlayers) => {
+    const handleRegister = (contestId, currentPlayers, contest) => {
         const user = firebase.auth().currentUser;
+
         if (user) {
             // Check if the user's ID is associated with the contest's registeredUsers field
             const db = firebase.firestore();
@@ -44,6 +52,16 @@ const Lobby = () => {
                                     registeredUsers: firebase.firestore.FieldValue.arrayUnion(user.uid),
                                 });
                                 setMessage('Registration successful!');
+                                if (currentPlayers + 1 === 6) {
+                                    // Contest reached 6 users, redirect to the draft page
+                                    navigate(`/draft/${contest.id}`, { // Use contest.id here
+                                        state: {
+                                            contestId: contest.id,
+                                            contestName: contest.name,
+                                            // Add any other data related to the players in the contest if needed
+                                        },
+                                    });
+                                }
                             } else {
                                 // Contest is full
                                 setMessage('Contest is full. Cannot register.');
@@ -63,7 +81,7 @@ const Lobby = () => {
         } else {
             // User is not authenticated
             setMessage('You need to log in before registering for a contest.');
-            // You can implement the redirect logic here
+            navigate('/login');
         }
     };
 
@@ -77,6 +95,7 @@ const Lobby = () => {
                         <th>Contest Name</th>
                         <th>Players</th>
                         <th>Register</th>
+                        <th>Draft Now!</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,10 +105,28 @@ const Lobby = () => {
                             <td>{`${contest.players}/6`}</td>
                             <td>
                                 <button
-                                    onClick={() => handleRegister(contest.id, contest.players)}
+                                    onClick={() => handleRegister(contest.id, contest.players, contest)}
                                     disabled={contest.players >= 6}
                                 >
                                     Register
+                                </button>
+                            </td>
+                            <td>
+                                <button
+                                    onClick={() => {
+                                        if (contest.players === 6 && isRegistered) {
+                                            navigate(`/draft/${contest.id}`, {
+                                                state: {
+                                                    contestId: contest.id,
+                                                    contestName: contest.name,
+                                                    // Add any other data related to the players in the contest if needed
+                                                },
+                                            });
+                                        }
+                                    }}
+                                    disabled={contest.players !== 6 || !isRegistered}
+                                >
+                                    Draft Now!
                                 </button>
                             </td>
                         </tr>
