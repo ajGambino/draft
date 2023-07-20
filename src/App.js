@@ -5,13 +5,15 @@ import Draft from './components/Draft';
 import Live from './components/Live';
 import Login from './components/Login';
 import Lobby from './components/Lobby';
+import Navbar from './components/Navbar';
 
 
 function App() {
   return (
     <Router>
+      <Navbar />
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/live" element={<Live />} />
         <Route path="/draft" element={<Draft />} />
         <Route path="/lobby" element={<Lobby />} />
