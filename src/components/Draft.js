@@ -7,35 +7,29 @@ import Card from './Card';
 
 const Draft = () => {
     const location = useLocation();
-    const { contestId, contestName } = location.state || {};
+    const { contestId, contestName, userRoster } = location.state || {};
     const [registeredUsers, setRegisteredUsers] = useState([]);
 
     useEffect(() => {
-
         const db = firebase.firestore();
         const contestRef = db.collection('contests').doc(contestId);
 
+        // Fetch the contest document
         contestRef.get().then((doc) => {
             if (doc.exists) {
-                const contestData = doc.data();
-
-                const registeredUsersData = contestData.registeredUsersData || [];
-                setRegisteredUsers(registeredUsersData);
+                // Fetch registered users and their rosters from the subcollection
+                contestRef.collection('registeredUsers').get().then((snapshot) => {
+                    const registeredUsersData = snapshot.docs.map((userDoc) => ({
+                        id: userDoc.id,
+                        ...userDoc.data(),
+                    }));
+                    setRegisteredUsers(registeredUsersData);
+                });
+            } else {
+                console.log('Contest does not exist.');
             }
         });
     }, [contestId]);
-
-
-    const generatePlaceholderCards = () => {
-        const remainingUsersCount = 6 - registeredUsers.length;
-        const placeholderCards = [];
-
-        for (let i = 0; i < remainingUsersCount; i++) {
-            placeholderCards.push(<Card key={`placeholder-${i}`} user={null} />);
-        }
-
-        return placeholderCards;
-    };
 
     return (
         <div>
@@ -44,9 +38,8 @@ const Draft = () => {
             <h2>Contest Name: {contestName}</h2>
             <div className="cards-container">
                 {registeredUsers.map((user) => (
-                    <Card key={user.id} user={user} />
+                    <Card key={user.id} user={user} roster={userRoster} /> // Pass userRoster as a prop to the Card component
                 ))}
-                {generatePlaceholderCards()}
             </div>
         </div>
     );
