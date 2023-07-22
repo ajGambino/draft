@@ -32,7 +32,7 @@ const Lobby = () => {
         return () => unsubscribe();
     }, []);
 
-    const handleRegister = (contestId, currentPlayers, contest) => {
+    const handleRegister = (contestId, currentPlayers, contestEntries, contest) => {
         const user = firebase.auth().currentUser;
 
         if (user) {
@@ -45,16 +45,18 @@ const Lobby = () => {
                     if (contestDoc.exists) {
                         const contestData = contestDoc.data();
                         if (!contestData.registeredUsers || !contestData.registeredUsers.includes(user.uid)) {
-                            if (currentPlayers < 6) {
+                            if (currentPlayers < contestEntries) {
                                 // Registration success
                                 transaction.update(contestRef, {
                                     players: currentPlayers + 1,
                                     registeredUsers: firebase.firestore.FieldValue.arrayUnion(user.uid),
                                 });
                                 setMessage('Registration successful!');
-                                if (currentPlayers + 1 === 6) {
-                                    // Contest reached 6 users, redirect to the draft page
-                                    navigate(`/draft/${contest.id}`, { // Use contest.id here
+                                if (currentPlayers + 1 === contestEntries) {
+                                    // Contest reached its maximum number of players, start the draft
+                                    // Set the entries field to the contestEntries
+                                    transaction.update(contestRef, { entries: contestEntries });
+                                    navigate(`/draft/${contest.id}`, {
                                         state: {
                                             contestId: contest.id,
                                             contestName: contest.name,
@@ -92,21 +94,21 @@ const Lobby = () => {
             <table>
                 <thead>
                     <tr>
-                        <th>Contest Name</th>
+                        <th>Contest </th>
                         <th>Players</th>
-                        <th>Register</th>
-                        <th>Draft Now!</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     {contests.map((contest) => (
                         <tr key={contest.id}>
                             <td>{contest.name}</td>
-                            <td>{`${contest.players}/6`}</td>
+                            <td>{`${contest.players}/${contest.entries}`}</td>
+
                             <td>
                                 <button
-                                    onClick={() => handleRegister(contest.id, contest.players, contest)}
-                                    disabled={contest.players >= 6}
+                                    onClick={() => handleRegister(contest.id, contest.players, contest.entries, contest)}
+                                    disabled={contest.players >= contest.entries}
                                 >
                                     Register
                                 </button>
@@ -114,7 +116,7 @@ const Lobby = () => {
                             <td>
                                 <button
                                     onClick={() => {
-                                        if (contest.players === 6 && isRegistered) {
+                                        if (contest.players === contest.entries && isRegistered) {
                                             navigate(`/draft/${contest.id}`, {
                                                 state: {
                                                     contestId: contest.id,
@@ -124,7 +126,7 @@ const Lobby = () => {
                                             });
                                         }
                                     }}
-                                    disabled={contest.players !== 6 || !isRegistered}
+                                    disabled={contest.players !== contest.entries || !isRegistered}
                                 >
                                     Draft Now!
                                 </button>
