@@ -2,6 +2,7 @@ import React from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import { useNavigate } from 'react-router-dom';
+import addUserToFirestore from '../addUserToFirestore';
 
 
 const firebaseConfig = {
@@ -25,6 +26,8 @@ const Login = () => {
             .then((result) => {
                 const user = result.user;
                 console.log('Logged in user:', user);
+
+                addUserToFirestore(user);
                 navigate('/lobby')
             })
             .catch((error) => {

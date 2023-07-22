@@ -1,14 +1,17 @@
+// Card.js
 import React from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 
-const Card = ({ user }) => {
+const Card = ({ user, roster }) => {
+    // Function to fetch the user's Google profile picture URL
     const fetchProfilePicture = async () => {
         try {
             const user = firebase.auth().currentUser;
             if (user && user.providerData && user.providerData.length > 0) {
                 const provider = user.providerData[0].providerId;
                 if (provider === 'google.com') {
+                    // The user is signed in with Google, fetch the profile picture URL
                     const googleProfilePicture = user.providerData[0].photoURL;
                     return googleProfilePicture;
                 }
@@ -19,6 +22,7 @@ const Card = ({ user }) => {
         return null;
     };
 
+    // Use React hooks to fetch the profile picture URL and update the state
     const [profilePictureUrl, setProfilePictureUrl] = React.useState(null);
 
     React.useEffect(() => {
@@ -30,18 +34,26 @@ const Card = ({ user }) => {
     return (
         <div className="card">
             {profilePictureUrl && <img src={profilePictureUrl} alt="Profile" />}
-            {user ? (
+            {roster ? (
                 <div className="card-content">
                     <h3>{user.name}</h3>
-                    <p>QB: {user.qb}</p>
-                    <p>RB: {user.rb1}</p>
-                    <p>RB: {user.rb2}</p>
-                    <p>WR: {user.wr1}</p>
-                    <p>WR: {user.wr2}</p>
-                    <p>TE: {user.te}</p>
+                    <p>QB: {roster.qb}</p>
+                    <p>RB: {roster.rb1}</p>
+                    <p>RB: {roster.rb2}</p>
+                    <p>WR: {roster.wr1}</p>
+                    <p>WR: {roster.wr2}</p>
+                    <p>TE: {roster.te}</p>
                 </div>
             ) : (
-                <p>No user data available.</p>
+                <div className="card-content">
+                    <p>No user data available.</p>
+                    <p>QB: </p>
+                    <p>RB: </p>
+                    <p>RB: </p>
+                    <p>WR: </p>
+                    <p>WR: </p>
+                    <p>TE: </p>
+                </div>
             )}
         </div>
     );
