@@ -7,6 +7,20 @@ fix bug where draft now is sometimes greyed out
 
 write logic to store each users bid
 
+add $100 bankroll to user Card component
+-logic to subtract when winning bid.
+add max button?
+
+edge cases:
+
+must have $1 for every position left to fill
+handle tie breakers
+if no one bids, the person who selected a player wins the player for $1
+
+
+
+
+
 
 Real-time Bidding:
 

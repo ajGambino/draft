@@ -52,7 +52,7 @@ const PlayerList = ({ onSelectPlayer }) => {
 
     return (
         <div>
-            <h1>Player List</h1>
+            <h1>Select a Player</h1>
             <div>
                 <ul>
                     <li className={selectedPosition === 'All' ? 'active' : ''} onClick={() => handleTabClick('All')}>
