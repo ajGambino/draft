@@ -6,23 +6,6 @@ const AuctionBlock = ({ selectedPlayer, timerStarted, setTimerStarted }) => {
     const [bid, setBid] = useState('');
     const [countdown, setCountdown] = useState(30);
 
-    useEffect(() => {
-        if (timerStarted && countdown > 0) {
-            const interval = setInterval(() => {
-                setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 0));
-            }, 1000);
-
-            // Clean up the interval when the component is unmounted or countdown reaches 0
-            return () => clearInterval(interval);
-        }
-
-        // Reset the timer and allow player selection when countdown reaches 0s
-        if (countdown === 0 && timerStarted) {
-            setTimerStarted(false);
-            setBid(''); // Reset the bid input to an empty string
-        }
-    }, [timerStarted, countdown, setTimerStarted]);
-
     const handleSubmit = (e) => {
         e.preventDefault();
         // Logic here to update the selectedPlayer in Firestore with the current selected player
@@ -51,6 +34,22 @@ const AuctionBlock = ({ selectedPlayer, timerStarted, setTimerStarted }) => {
         // Display the success message with the bid amount
         alert(`Your $${bid} bid has been placed.`);
     };
+
+    useEffect(() => {
+        if (timerStarted && countdown > 0) {
+            const interval = setInterval(() => {
+                setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 0));
+            }, 1000);
+
+            // Clean up the interval when the component is unmounted or countdown reaches 0
+            return () => clearInterval(interval);
+        }
+
+        // Reset the timer and allow player selection when countdown reaches 0s
+        if (countdown === 0 && timerStarted) {
+            setTimerStarted(false);
+        }
+    }, [timerStarted, countdown, setTimerStarted]);
 
     return (
         <div className='AuctionBlock'>
