@@ -6,15 +6,18 @@ import { useLocation } from 'react-router-dom';
 import Card from './Card';
 import AuctionBlock from './AuctionBlock';
 import PlayerList from './PlayerList';
+
 const Draft = () => {
     const location = useLocation();
     const { contestId, contestName, userRoster } = location.state || {};
     const [registeredUsers, setRegisteredUsers] = useState([]);
     const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [timerStarted, setTimerStarted] = useState(false);
 
     const handleSelectPlayer = (player) => {
         console.log('Selected Player:', player);
         setSelectedPlayer(player); // Set the selected player in the state
+        setTimerStarted(true); // Start the timer when a player is selected
     };
 
     useEffect(() => {
@@ -43,7 +46,7 @@ const Draft = () => {
             <h1>Welcome to the Draft</h1>
             <h2>Contest ID: {contestId}</h2>
             <h2>Contest Name: {contestName}</h2>
-            <AuctionBlock selectedPlayer={selectedPlayer} />
+            <AuctionBlock selectedPlayer={selectedPlayer} timerStarted={timerStarted} />
             <PlayerList onSelectPlayer={handleSelectPlayer} />
             <div className="cards-container">
                 {registeredUsers.map((user) => (
