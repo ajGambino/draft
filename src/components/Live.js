@@ -2,7 +2,7 @@ import React from 'react'
 
 const Live = () => {
     return (
-        <div>Live</div>
+        <div>Live Tacking</div>
     )
 }
 
