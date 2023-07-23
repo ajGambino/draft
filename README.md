@@ -1,5 +1,14 @@
 TO DO:
 
+Draft State:
+
+track the index of the current user's turn in the Draft component state.
+use the tracked index to display the name of the user in the "Select a Player" header.
+increment the turn index each time a user selects a player.
+
+synchronize the selected player and timer between multiple users in the same draft
+implement real-time communication and data synchronization between clients using firestore 
+
 change draft now button to only if full AND logged in user
 is one of the registered users
 
@@ -11,32 +20,19 @@ add $100 bankroll to user Card component
 -logic to subtract when winning bid.
 add max button?
 
-edge cases:
-
+Edge Cases:
 must have $1 for every position left to fill
 handle tie breakers
 if no one bids, the person who selected a player wins the player for $1
 
+subcollection bid amount should reset for each user document or 
+add player field so they have multiple bid amounts ?
 
+render selected player and timer for all users in draft
 
-
-
-
-Real-time Bidding:
-
-To handle real-time bidding, use Firebase Realtime Database or Firestore's real-time capabilities (Firestore listeners).
- When the timer expires, it will trigger a function to determine the highest bidder.
-Use Firebase Realtime Database or Firestore to store and synchronize bid data among all users participating in the draft.
-Determine Highest Bidder:
-
-When the timer expires, the system should determine the highest bidder based on the bid amounts entered by each user.
-Compare the bids and identify the highest bid and the corresponding user.
 Update Roster:
+once highest bidder is determined, update the winning user's roster in the 'registeredUsers' subcollection.
+if the user already has an RB1 or WR1 in their roster, add the player to the corresponding RB2 or WR2 field. if not, add the player to the RB1 or WR1 field.
+update the player's status to indicate that they are no longer available for bidding.
 
-Once the highest bidder is determined, update the winning user's roster in the 'registeredUsers' subcollection.
-Check if the user already has an RB1 or WR1 in their roster. If they do, add the player to the corresponding RB2 or WR2 field. If not, add the player to the RB1 or WR1 field.
-Update the player's status to indicate that they are no longer available for bidding.
-Continue Auction:
 
-Repeat the process to place the next player on the auction block until all players have been drafted.
-Remember edge cases to consider. 
