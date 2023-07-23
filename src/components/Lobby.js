@@ -131,13 +131,16 @@ const Lobby = () => {
                 <thead>
                     <tr>
                         <th>Contest</th>
+                        <th>Buyin</th>
                         <th>Players</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     {contests.map((contest) => (
                         <tr key={contest.id}>
                             <td>{contest.name}</td>
+                            <td>{contest.buyin}</td>
                             <td>{`${contest.players}/${contest.entries}`}</td>
                             <td>
                                 <button

@@ -36,7 +36,7 @@ const CreateContest = () => {
 
     return (
         <div>
-            <h1>Create Contest</h1>
+            <h1>Create New Auction</h1>
             {successMessage && <p>{successMessage}</p>}
             <form onSubmit={handleSubmit}>
                 <label>
@@ -59,7 +59,7 @@ const CreateContest = () => {
                 <label>
                     Buyin $:
                     <select value={buyin} onChange={(e) => setBuyin(e.target.value)} required>
-                        <option value="free">Free</option>
+                        <option value="$0">$0</option>
                         <option value="$1">$1</option>
                         <option value="$5">$5</option>
                     </select>

@@ -1,6 +1,10 @@
 TO DO:
 
+bid input require whole positive integer
+
 Draft State:
+
+redirect all registered users to /draft not just the last user to fill
 
 track the index of the current user's turn in the Draft component state.
 use the tracked index to display the name of the user in the "Select a Player" header.
