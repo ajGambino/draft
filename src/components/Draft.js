@@ -4,7 +4,8 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import { useLocation } from 'react-router-dom';
 import Card from './Card';
-
+import AuctionBlock from './AuctionBlock';
+import PlayerList from './PlayerList';
 const Draft = () => {
     const location = useLocation();
     const { contestId, contestName, userRoster } = location.state || {};
@@ -36,6 +37,8 @@ const Draft = () => {
             <h1>Welcome to the Draft</h1>
             <h2>Contest ID: {contestId}</h2>
             <h2>Contest Name: {contestName}</h2>
+            <AuctionBlock />
+            <PlayerList />
             <div className="cards-container">
                 {registeredUsers.map((user) => (
                     <Card key={user.id} user={user} roster={userRoster} /> // Pass userRoster as a prop to the Card component

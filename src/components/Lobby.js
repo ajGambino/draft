@@ -42,7 +42,6 @@ const Lobby = () => {
 
         return () => unsubscribe();
     }, []);
-
     const handleRegister = (contestId, currentPlayers, contestEntries, contest) => {
         const user = firebase.auth().currentUser;
 
@@ -60,21 +59,35 @@ const Lobby = () => {
                         // Fetch the user's data from the registeredUsers subcollection
                         return transaction.get(userRef).then((userDoc) => {
                             if (userDoc.exists) {
-                                // User is already registered
+                                // User is already registered, do nothing
                                 setMessage('You are already registered for this contest.');
                             } else {
-                                // User is not registered, create a new document in the subcollection
+                                // User is not registered, proceed with registration
+                                // Initialize the roster with empty values for each position
+                                const initialRoster = {
+                                    QB: '',
+                                    RB1: '',
+                                    RB2: '',
+                                    WR1: '',
+                                    WR2: '',
+                                    TE: '',
+                                };
+
+                                // Create the user's document in the subcollection with the initial roster
                                 const newUserDoc = {
                                     name: user.displayName,
                                     email: user.email,
                                     picture: user.photoURL,
-                                    roster: {}, // Assuming roster is an empty map for new users
+                                    roster: initialRoster,
                                 };
+
+                                // Add the user document to the registeredUsers subcollection
                                 transaction.set(userRef, newUserDoc);
 
-                                // Update the players count in the contest document
+                                // Continue with the registration process as usual
                                 transaction.update(contestRef, {
                                     players: contestData.players + 1,
+                                    [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
                                 });
 
                                 setMessage('Registration successful!');
@@ -87,6 +100,7 @@ const Lobby = () => {
                                         state: {
                                             contestId: contestRef.id,
                                             contestName: contestData.name,
+                                            userRoster: initialRoster, // Pass initialRoster to the Draft page
                                         },
                                     });
                                 }
