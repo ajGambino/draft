@@ -14,12 +14,6 @@ const Draft = () => {
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [timerStarted, setTimerStarted] = useState(false);
 
-    const handleSelectPlayer = (player) => {
-        console.log('Selected Player:', player);
-        setSelectedPlayer(player); // Set the selected player in the state
-        setTimerStarted(true); // Start the timer when a player is selected
-    };
-
     useEffect(() => {
         const db = firebase.firestore();
         const contestRef = db.collection('contests').doc(contestId);
@@ -41,16 +35,26 @@ const Draft = () => {
         });
     }, [contestId]);
 
+    const handleSelectPlayer = (player) => {
+        console.log('Selected Player:', player);
+        setSelectedPlayer(player); // Set the selected player in the state
+        setTimerStarted(true); // Start the timer when a player is selected
+    };
+
     return (
         <div>
             <h1>Welcome to the Draft</h1>
             <h2>Contest ID: {contestId}</h2>
             <h2>Contest Name: {contestName}</h2>
-            <AuctionBlock selectedPlayer={selectedPlayer} timerStarted={timerStarted} />
-            <PlayerList onSelectPlayer={handleSelectPlayer} />
-            <div className="cards-container">
+            <AuctionBlock
+                selectedPlayer={selectedPlayer}
+                timerStarted={timerStarted}
+                setTimerStarted={setTimerStarted}
+            />
+            {!timerStarted && <PlayerList onSelectPlayer={handleSelectPlayer} />}
+            <div className='cards-container'>
                 {registeredUsers.map((user) => (
-                    <Card key={user.id} user={user} roster={userRoster} /> // Pass userRoster as a prop to the Card component
+                    <Card key={user.id} user={user} roster={userRoster} />
                 ))}
             </div>
         </div>
