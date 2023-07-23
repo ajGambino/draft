@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 
-const PlayerList = () => {
+const PlayerList = ({ onSelectPlayer }) => {
     const [players, setPlayers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedPosition, setSelectedPosition] = useState('All'); // Initialize with 'All'
@@ -83,7 +83,7 @@ const PlayerList = () => {
                 </thead>
                 <tbody>
                     {currentPlayers.map((player) => (
-                        <tr key={player.id}>
+                        <tr key={player.id} onClick={() => onSelectPlayer(player)}>
                             <td>{player.name}</td>
                             <td>{player.position}</td>
                             <td>{player.projection}</td>

@@ -10,6 +10,12 @@ const Draft = () => {
     const location = useLocation();
     const { contestId, contestName, userRoster } = location.state || {};
     const [registeredUsers, setRegisteredUsers] = useState([]);
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+    const handleSelectPlayer = (player) => {
+        console.log('Selected Player:', player);
+        setSelectedPlayer(player); // Set the selected player in the state
+    };
 
     useEffect(() => {
         const db = firebase.firestore();
@@ -37,8 +43,8 @@ const Draft = () => {
             <h1>Welcome to the Draft</h1>
             <h2>Contest ID: {contestId}</h2>
             <h2>Contest Name: {contestName}</h2>
-            <AuctionBlock />
-            <PlayerList />
+            <AuctionBlock selectedPlayer={selectedPlayer} />
+            <PlayerList onSelectPlayer={handleSelectPlayer} />
             <div className="cards-container">
                 {registeredUsers.map((user) => (
                     <Card key={user.id} user={user} roster={userRoster} /> // Pass userRoster as a prop to the Card component
