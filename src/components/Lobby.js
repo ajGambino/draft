@@ -4,11 +4,15 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import { useNavigate } from 'react-router-dom';
 
+
 const Lobby = () => {
     const navigate = useNavigate();
     const [contests, setContests] = useState([]);
     const [message, setMessage] = useState('');
     const [isRegistered, setIsRegistered] = useState(false);
+    const handleCreateContest = () => {
+        navigate('/create');
+    };
 
     useEffect(() => {
         const db = firebase.firestore();
@@ -34,9 +38,10 @@ const Lobby = () => {
             }
         });
 
+
+
         return () => unsubscribe();
     }, []);
-
 
     const handleRegister = (contestId, currentPlayers, contestEntries, contest) => {
         const user = firebase.auth().currentUser;
@@ -55,63 +60,21 @@ const Lobby = () => {
                         // Fetch the user's data from the registeredUsers subcollection
                         return transaction.get(userRef).then((userDoc) => {
                             if (userDoc.exists) {
-                                const userData = userDoc.data();
-                                // Assuming roster is a map in the user's document
-                                const userRoster = userData.roster || {};
-
-                                // Check if the user is already registered for this contest
-                                if (!contestData.registeredUsers[userDoc.id]) {
-                                    // Check if the contest has reached its maximum number of players
-                                    if (contestData.players < contestData.entries) {
-                                        // Registration success
-                                        transaction.update(contestRef, {
-                                            players: contestData.players + 1,
-                                            [`registeredUsers.${userDoc.id}`]: true, // Use user's UID as the key in the map
-                                        });
-
-                                        setMessage('Registration successful!');
-
-                                        if (contestData.players + 1 === contestData.entries) {
-                                            // Contest reached its maximum number of players, start the draft
-                                            transaction.update(contestRef, { entries: contestData.entries });
-
-                                            navigate(`/draft/${contestRef.id}`, {
-                                                state: {
-                                                    contestId: contestRef.id,
-                                                    contestName: contestData.name,
-                                                },
-                                            });
-                                        }
-                                    } else {
-                                        // Contest is full
-                                        setMessage('Contest is full. Cannot register.');
-                                    }
-                                } else {
-                                    // User is already registered
-                                    setMessage('You are already registered for this contest.');
-                                }
+                                // User is already registered
+                                setMessage('You are already registered for this contest.');
                             } else {
-                                // User document does not exist in the subcollection
-                                // Create the user's document in the subcollection
+                                // User is not registered, create a new document in the subcollection
                                 const newUserDoc = {
                                     name: user.displayName,
                                     email: user.email,
                                     picture: user.photoURL,
-                                    roster: {
-                                        QB: "",
-                                        RB1: "",
-                                        RB2: "",
-                                        TE: "",
-                                        WR1: "",
-                                        WR2: "",
-                                    }, // Assuming roster is an empty map for new users
+                                    roster: {}, // Assuming roster is an empty map for new users
                                 };
                                 transaction.set(userRef, newUserDoc);
 
-                                // Continue with the registration process as usual
+                                // Update the players count in the contest document
                                 transaction.update(contestRef, {
                                     players: contestData.players + 1,
-                                    [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
                                 });
 
                                 setMessage('Registration successful!');
@@ -144,9 +107,11 @@ const Lobby = () => {
         }
     };
 
+
     return (
         <div>
             <h1>Lobby</h1>
+            <button onClick={handleCreateContest}>Create a Contest</button>
             {message && <p>{message}</p>}
             <table>
                 <thead>

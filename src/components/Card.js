@@ -9,12 +9,12 @@ const Card = ({ user, roster }) => {
                     <h3>{user.name}</h3>
                     {user.roster ? (
                         <>
-                            <p>QB: {user.roster.qb}</p>
-                            <p>RB: {user.roster.rb1}</p>
-                            <p>RB: {user.roster.rb2}</p>
-                            <p>WR: {user.roster.wr1}</p>
-                            <p>WR: {user.roster.wr2}</p>
-                            <p>TE: {user.roster.te}</p>
+                            <p>QB: {user.roster.QB}</p>
+                            <p>RB: {user.roster.RB1}</p>
+                            <p>RB: {user.roster.RB2}</p>
+                            <p>WR: {user.roster.WR1}</p>
+                            <p>WR: {user.roster.WR2}</p>
+                            <p>TE: {user.roster.TE}</p>
                         </>
                     ) : (
                         <>
