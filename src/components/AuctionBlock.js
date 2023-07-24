@@ -2,9 +2,41 @@ import React, { useState, useEffect } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 
-const AuctionBlock = ({ selectedPlayer, timerStarted, setTimerStarted }) => {
+const AuctionBlock = ({ contestId, selectedPlayer, timerStarted, setTimerStarted }) => {
     const [bid, setBid] = useState('');
     const [countdown, setCountdown] = useState(30);
+
+    useEffect(() => {
+        const db = firebase.firestore();
+        const draftStateRef = db.collection('contests').doc(contestId);
+
+        // Listen for changes in the draft state
+        const unsubscribe = draftStateRef.onSnapshot((doc) => {
+            const data = doc.data();
+            if (data) {
+                setTimerStarted(data.timerStarted);
+            }
+        });
+
+        // Clean up the listener when the component unmounts
+        return () => unsubscribe();
+    }, [contestId, setTimerStarted]);
+
+    useEffect(() => {
+        if (timerStarted && countdown > 0) {
+            const interval = setInterval(() => {
+                setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 0));
+            }, 1000);
+
+            // Clean up the interval when the component is unmounted or countdown reaches 0
+            return () => clearInterval(interval);
+        }
+
+        // Reset the timer and allow player selection when countdown reaches 0s
+        if (countdown === 0 && timerStarted) {
+            setTimerStarted(false);
+        }
+    }, [timerStarted, countdown, setTimerStarted]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -34,22 +66,6 @@ const AuctionBlock = ({ selectedPlayer, timerStarted, setTimerStarted }) => {
         // Display the success message with the bid amount
         alert(`Your $${bid} bid has been placed.`);
     };
-
-    useEffect(() => {
-        if (timerStarted && countdown > 0) {
-            const interval = setInterval(() => {
-                setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 0));
-            }, 1000);
-
-            // Clean up the interval when the component is unmounted or countdown reaches 0
-            return () => clearInterval(interval);
-        }
-
-        // Reset the timer and allow player selection when countdown reaches 0s
-        if (countdown === 0 && timerStarted) {
-            setTimerStarted(false);
-        }
-    }, [timerStarted, countdown, setTimerStarted]);
 
     return (
         <div className='AuctionBlock'>

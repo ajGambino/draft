@@ -50,6 +50,7 @@ const Draft = () => {
                     selectedPlayer={selectedPlayer}
                     timerStarted={timerStarted}
                     setTimerStarted={setTimerStarted}
+                    setSelectedPlayer={setSelectedPlayer}
                 />
             ) : (
                 <PlayerList onSelectPlayer={handleSelectPlayer} />
