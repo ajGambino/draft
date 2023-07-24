@@ -12,6 +12,7 @@ const Draft = () => {
     const [registeredUsers, setRegisteredUsers] = useState([]);
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [timerStarted, setTimerStarted] = useState(false);
+    const [currentUserIndex, setCurrentUserIndex] = useState(0);
 
     useEffect(() => {
         const db = firebase.firestore();
@@ -35,14 +36,22 @@ const Draft = () => {
     }, [contestId]);
 
     const handleSelectPlayer = (player) => {
-        console.log('Selected Player:', player);
-        setSelectedPlayer(player);
-        setTimerStarted(true);
+        if (currentUserIndex === 0) {
+            // Only the user whose turn it is can select a player
+            console.log('Selected Player:', player);
+            setSelectedPlayer(player);
+            setTimerStarted(true);
+            setCurrentUserIndex((prevIndex) => (prevIndex + 1) % registeredUsers.length);
+        } else {
+            // Display a message or notification that it's not the user's turn
+            console.log("It's not your turn to select a player.");
+        }
     };
 
     return (
         <div>
             <h1>Welcome to the Draft</h1>
+            <h1>Select a player, {registeredUsers[currentUserIndex]?.name}</h1>
             <h2>Contest ID: {contestId}</h2>
             <h2>Contest Name: {contestName}</h2>
             {timerStarted ? (
@@ -53,7 +62,7 @@ const Draft = () => {
                     setSelectedPlayer={setSelectedPlayer}
                 />
             ) : (
-                <PlayerList onSelectPlayer={handleSelectPlayer} />
+                <PlayerList onSelectPlayer={handleSelectPlayer} currentUserIndex={currentUserIndex} />
             )}
             <div className='cards-container'>
                 {registeredUsers.map((user) => (
