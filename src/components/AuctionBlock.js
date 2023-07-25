@@ -5,6 +5,7 @@ import 'firebase/compat/firestore';
 const AuctionBlock = ({ contestId, selectedPlayer, timerStarted, setTimerStarted }) => {
     const [bid, setBid] = useState('');
     const [countdown, setCountdown] = useState(30);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
         const db = firebase.firestore();
@@ -40,31 +41,38 @@ const AuctionBlock = ({ contestId, selectedPlayer, timerStarted, setTimerStarted
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Logic here to update the selectedPlayer in Firestore with the current selected player
-        // and store the bid amount for the current user.
-        const db = firebase.firestore();
-        const selectedPlayerRef = db.collection('auctionBlock').doc('selectedPlayer');
+        // Validate the bid amount before proceeding
+        const parsedBid = parseInt(bid);
+        if (Number.isInteger(parsedBid) && parsedBid > 0) {
+            // Logic here to update the selectedPlayer in Firestore with the current selected player
+            // and store the bid amount for the current user.
+            const db = firebase.firestore();
+            const selectedPlayerRef = db.collection('auctionBlock').doc('selectedPlayer');
 
-        // Update the selected player data
-        selectedPlayerRef.set({
-            name: selectedPlayer.name,
-            position: selectedPlayer.position,
-            projection: selectedPlayer.projection,
-            bidAmount: bid,
-        });
-
-        // Add the bid amount as a subcollection document for the current user
-        const currentUser = firebase.auth().currentUser;
-        if (currentUser) {
-            selectedPlayerRef.collection('bidAmounts').doc(currentUser.uid).set({
+            // Update the selected player data
+            selectedPlayerRef.set({
+                name: selectedPlayer.name,
+                position: selectedPlayer.position,
+                projection: selectedPlayer.projection,
                 bidAmount: bid,
             });
-        }
-        // Reset the bid input to an empty string after placing the bid
-        setBid('');
 
-        // Display the success message with the bid amount
-        alert(`Your $${bid} bid has been placed.`);
+            // Add the bid amount as a subcollection document for the current user
+            const currentUser = firebase.auth().currentUser;
+            if (currentUser) {
+                selectedPlayerRef.collection('bidAmounts').doc(currentUser.uid).set({
+                    bidAmount: bid,
+                });
+            }
+
+            // Display the success message with the bid amount
+            setMessage(`Your $${bid} bid has been placed.`);
+            // Reset the bid input to an empty string after placing the bid
+            setBid('');
+        } else {
+            // Display the error message for invalid bid amount
+            setMessage('Invalid bid amount. Please enter a positive whole number.');
+        }
     };
 
     return (
@@ -97,6 +105,7 @@ const AuctionBlock = ({ contestId, selectedPlayer, timerStarted, setTimerStarted
                 <button type='submit' disabled={!selectedPlayer}>
                     Place Bid
                 </button>
+                {message && <p>{message}</p>}
             </form>
         </div>
     );

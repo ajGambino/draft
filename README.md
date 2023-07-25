@@ -1,20 +1,13 @@
 TO DO:
 
-bid input require whole positive integer
-
 Draft State:
 
 redirect all registered users to /draft not just the last user to fill
 
-track the index of the current user's turn in the Draft component state.
-use the tracked index to display the name of the user in the "Select a Player" header.
-increment the turn index each time a user selects a player.
-
 synchronize the selected player and timer between multiple users in the same draft
 implement real-time communication and data synchronization between clients using firestore 
 
-change draft now button to only if full AND logged in user
-is one of the registered users
+
 
 fix bug where draft now is sometimes greyed out 
 

@@ -4,12 +4,14 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import { useNavigate } from 'react-router-dom';
 
-
 const Lobby = () => {
     const navigate = useNavigate();
     const [contests, setContests] = useState([]);
     const [message, setMessage] = useState('');
     const [isRegistered, setIsRegistered] = useState(false);
+    const [currentUserContest, setCurrentUserContest] = useState(null);
+    const [isUserRegistered, setIsUserRegistered] = useState(false); // Add this line
+
     const handleCreateContest = () => {
         navigate('/create');
     };
@@ -34,85 +36,84 @@ const Lobby = () => {
                 Promise.all(promises).then((results) => {
                     const isUserRegistered = results.some((isRegistered) => isRegistered);
                     setIsRegistered(isUserRegistered);
+
+                    // Get the contest where the current user is registered
+                    if (isUserRegistered) {
+                        const userContest = contestsData.find((contest) => contest.registeredUsers[user.uid]);
+                        setCurrentUserContest(userContest);
+                    }
                 });
             }
         });
 
-
-
         return () => unsubscribe();
     }, []);
+
     const handleRegister = (contestId, currentPlayers, contestEntries, contest) => {
         const user = firebase.auth().currentUser;
 
         if (user) {
-            // Check if the user's ID is associated with the contest's registeredUsers subcollection
             const db = firebase.firestore();
             const contestRef = db.collection('contests').doc(contestId);
             const userRef = contestRef.collection('registeredUsers').doc(user.uid);
 
-            db.runTransaction((transaction) => {
-                return transaction.get(contestRef).then((contestDoc) => {
-                    if (contestDoc.exists) {
-                        const contestData = contestDoc.data();
+            // Check if the user is already registered for the contest
+            userRef.get().then((userDoc) => {
+                if (userDoc.exists) {
+                    setMessage('You are already registered for this contest.');
+                } else {
+                    // User is not registered, proceed with registration
 
-                        // Fetch the user's data from the registeredUsers subcollection
-                        return transaction.get(userRef).then((userDoc) => {
-                            if (userDoc.exists) {
-                                // User is already registered, do nothing
-                                setMessage('You are already registered for this contest.');
-                            } else {
-                                // User is not registered, proceed with registration
-                                // Initialize the roster with empty values for each position
-                                const initialRoster = {
-                                    QB: '',
-                                    RB1: '',
-                                    RB2: '',
-                                    WR1: '',
-                                    WR2: '',
-                                    TE: '',
-                                };
+                    // Get an array of registered user UIDs from the map
+                    const registeredUserUids = Object.keys(contest.registeredUsers);
 
-                                // Create the user's document in the subcollection with the initial roster
-                                const newUserDoc = {
-                                    name: user.displayName,
-                                    email: user.email,
-                                    picture: user.photoURL,
-                                    roster: initialRoster,
-                                };
+                    const isUserRegistered = registeredUserUids.includes(user.uid);
+                    setIsUserRegistered(isUserRegistered); // Set the registration status for the current user
 
-                                // Add the user document to the registeredUsers subcollection
-                                transaction.set(userRef, newUserDoc);
+                    if (!isUserRegistered) {
+                        // Initialize the roster with empty values for each position
+                        const initialRoster = {
+                            QB: '',
+                            RB1: '',
+                            RB2: '',
+                            WR1: '',
+                            WR2: '',
+                            TE: '',
+                        };
 
-                                // Continue with the registration process as usual
-                                transaction.update(contestRef, {
-                                    players: contestData.players + 1,
-                                    [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
-                                });
+                        // Create the user's document in the subcollection with the initial roster
+                        const newUserDoc = {
+                            name: user.displayName,
+                            email: user.email,
+                            picture: user.photoURL,
+                            roster: initialRoster,
+                        };
 
-                                setMessage('Registration successful!');
+                        // Add the user document to the registeredUsers subcollection
+                        userRef.set(newUserDoc);
 
-                                if (contestData.players + 1 === contestData.entries) {
-                                    // Contest reached its maximum number of players, start the draft
-                                    transaction.update(contestRef, { entries: contestData.entries });
-
-                                    navigate(`/draft/${contestRef.id}`, {
-                                        state: {
-                                            contestId: contestRef.id,
-                                            contestName: contestData.name,
-                                            userRoster: initialRoster, // Pass initialRoster to the Draft page
-                                        },
-                                    });
-                                }
-                            }
+                        // Continue with the registration process as usual
+                        contestRef.update({
+                            players: currentPlayers + 1,
+                            [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
                         });
-                    } else {
-                        // Contest does not exist
-                        setMessage('Contest does not exist.');
+
+                        setMessage('Registration successful!');
+
+                        if (currentPlayers + 1 === contestEntries) {
+                            // Contest reached its maximum number of players, start the draft
+                            contestRef.update({ entries: contestEntries });
+
+                            navigate(`/draft/${contestId}`, {
+                                state: {
+                                    contestId,
+                                    contestName: contest.name,
+                                    userRoster: initialRoster, // Pass initialRoster to the Draft page
+                                },
+                            });
+                        }
                     }
-                });
-            }).catch((error) => {
-                console.error('Error during registration:', error);
+                }
             });
         } else {
             // User is not authenticated
@@ -120,7 +121,6 @@ const Lobby = () => {
             navigate('/login');
         }
     };
-
 
     return (
         <div>
@@ -133,7 +133,6 @@ const Lobby = () => {
                         <th>Contest</th>
                         <th>Buyin</th>
                         <th>Players</th>
-
                     </tr>
                 </thead>
                 <tbody>
@@ -144,9 +143,7 @@ const Lobby = () => {
                             <td>{`${contest.players}/${contest.entries}`}</td>
                             <td>
                                 <button
-                                    onClick={() =>
-                                        handleRegister(contest.id, contest.players, contest.entries, contest)
-                                    }
+                                    onClick={() => handleRegister(contest.id, contest.players, contest.entries, contest)}
                                     disabled={contest.players >= contest.entries}
                                 >
                                     Register
@@ -155,7 +152,7 @@ const Lobby = () => {
                             <td>
                                 <button
                                     onClick={() => {
-                                        if (contest.players === contest.entries && isRegistered) {
+                                        if (contest.players === contest.entries && isRegistered && contest === currentUserContest) {
                                             navigate(`/draft/${contest.id}`, {
                                                 state: {
                                                     contestId: contest.id,
@@ -165,7 +162,9 @@ const Lobby = () => {
                                             });
                                         }
                                     }}
-                                    disabled={contest.players !== contest.entries || !isRegistered}
+                                    disabled={
+                                        contest.players !== contest.entries || !isRegistered || contest.players < 1 || contest !== currentUserContest
+                                    }
                                 >
                                     Draft Now!
                                 </button>
