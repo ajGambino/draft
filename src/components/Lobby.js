@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 const Lobby = () => {
     const navigate = useNavigate();
     const [contests, setContests] = useState([]);
-    const [isUserRegistered, setIsUserRegistered] = useState(false);
+    const [isUserRegistered, setIsUserRegistered] = useState(null);
+
 
     const handleCreateContest = () => {
         navigate('/create');
@@ -15,6 +16,7 @@ const Lobby = () => {
 
     useEffect(() => {
         const db = firebase.firestore();
+
         const unsubscribe = db.collection('contests').onSnapshot((snapshot) => {
             const contestsData = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -22,13 +24,21 @@ const Lobby = () => {
             }));
             setContests(contestsData);
 
-            // Check if the current user is registered for any of the contests
             const user = firebase.auth().currentUser;
             if (user) {
-                const isUserRegistered = contestsData.some((contest) => contest.registeredUsers[user.uid]);
-                setIsUserRegistered(isUserRegistered);
+                const promises = contestsData.map((contest) => {
+                    const userRef = db.collection('contests').doc(contest.id).collection('registeredUsers').doc(user.uid);
+                    return userRef.get().then((doc) => doc.exists);
+                });
+
+                Promise.all(promises).then((results) => {
+                    const isUserRegistered = results.some((isRegistered) => isRegistered);
+                    setIsUserRegistered(isUserRegistered);
+                });
             }
         });
+
+
 
         return () => unsubscribe();
     }, []);
@@ -145,10 +155,12 @@ const Lobby = () => {
                                                 },
                                             });
                                         } else if (!isUserRegisteredForCurrentContest) {
-                                            alert('You are not registered for this contest.');
+                                            alert('You are not registered for this contest. Please register before drafting.');
+                                        } else if (contest.players !== contest.entries) {
+                                            alert("Draft now yet available, contest is not full.")
                                         }
                                     }}
-                                    disabled={!isUserRegistered || contest.players !== contest.entries}
+
                                 >
                                     Draft Now!
                                 </button>
