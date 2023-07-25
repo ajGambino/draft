@@ -144,6 +144,8 @@ const Lobby = () => {
                                                     // Add any other data related to the players in the contest if needed
                                                 },
                                             });
+                                        } else if (!isUserRegisteredForCurrentContest) {
+                                            alert('You are not registered for this contest.');
                                         }
                                     }}
                                     disabled={!isUserRegistered || contest.players !== contest.entries}
