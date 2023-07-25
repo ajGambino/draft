@@ -7,10 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const Lobby = () => {
     const navigate = useNavigate();
     const [contests, setContests] = useState([]);
-    const [message, setMessage] = useState('');
-    const [isRegistered, setIsRegistered] = useState(false);
-    const [currentUserContest, setCurrentUserContest] = useState(null);
-    const [isUserRegistered, setIsUserRegistered] = useState(false); // Add this line
+    const [isUserRegistered, setIsUserRegistered] = useState(false);
 
     const handleCreateContest = () => {
         navigate('/create');
@@ -28,21 +25,8 @@ const Lobby = () => {
             // Check if the current user is registered for any of the contests
             const user = firebase.auth().currentUser;
             if (user) {
-                const promises = contestsData.map((contest) => {
-                    const userRef = db.collection('contests').doc(contest.id).collection('registeredUsers').doc(user.uid);
-                    return userRef.get().then((doc) => doc.exists);
-                });
-
-                Promise.all(promises).then((results) => {
-                    const isUserRegistered = results.some((isRegistered) => isRegistered);
-                    setIsRegistered(isUserRegistered);
-
-                    // Get the contest where the current user is registered
-                    if (isUserRegistered) {
-                        const userContest = contestsData.find((contest) => contest.registeredUsers[user.uid]);
-                        setCurrentUserContest(userContest);
-                    }
-                });
+                const isUserRegistered = contestsData.some((contest) => contest.registeredUsers[user.uid]);
+                setIsUserRegistered(isUserRegistered);
             }
         });
 
@@ -60,64 +44,60 @@ const Lobby = () => {
             // Check if the user is already registered for the contest
             userRef.get().then((userDoc) => {
                 if (userDoc.exists) {
-                    setMessage('You are already registered for this contest.');
+                    // User is already registered, do nothing
+                    alert('You are already registered for this contest.');
                 } else {
                     // User is not registered, proceed with registration
 
-                    // Get an array of registered user UIDs from the map
-                    const registeredUserUids = Object.keys(contest.registeredUsers);
+                    // Initialize the roster with empty values for each position
+                    const initialRoster = {
+                        QB: '',
+                        RB1: '',
+                        RB2: '',
+                        WR1: '',
+                        WR2: '',
+                        TE: '',
+                    };
 
-                    const isUserRegistered = registeredUserUids.includes(user.uid);
-                    setIsUserRegistered(isUserRegistered); // Set the registration status for the current user
+                    // Create the user's document in the subcollection with the initial roster
+                    const newUserDoc = {
+                        name: user.displayName,
+                        email: user.email,
+                        picture: user.photoURL,
+                        roster: initialRoster,
+                    };
 
-                    if (!isUserRegistered) {
-                        // Initialize the roster with empty values for each position
-                        const initialRoster = {
-                            QB: '',
-                            RB1: '',
-                            RB2: '',
-                            WR1: '',
-                            WR2: '',
-                            TE: '',
-                        };
+                    // Add the user document to the registeredUsers subcollection
+                    userRef.set(newUserDoc);
 
-                        // Create the user's document in the subcollection with the initial roster
-                        const newUserDoc = {
-                            name: user.displayName,
-                            email: user.email,
-                            picture: user.photoURL,
-                            roster: initialRoster,
-                        };
+                    // Continue with the registration process as usual
+                    contestRef.update({
+                        players: currentPlayers + 1,
+                        [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
+                    });
 
-                        // Add the user document to the registeredUsers subcollection
-                        userRef.set(newUserDoc);
+                    alert('Registration successful!');
 
-                        // Continue with the registration process as usual
-                        contestRef.update({
-                            players: currentPlayers + 1,
-                            [`registeredUsers.${user.uid}`]: true, // Use user's UID as the key in the map
+                    if (currentPlayers + 1 === contestEntries) {
+                        // Contest reached its maximum number of players, start the draft
+                        contestRef.update({ entries: contestEntries });
+
+                        navigate(`/draft/${contestId}`, {
+                            state: {
+                                contestId: contest.id,
+                                contestName: contest.name,
+                                userRoster: initialRoster, // Pass initialRoster to the Draft page
+                            },
                         });
-
-                        setMessage('Registration successful!');
-
-                        if (currentPlayers + 1 === contestEntries) {
-                            // Contest reached its maximum number of players, start the draft
-                            contestRef.update({ entries: contestEntries });
-
-                            navigate(`/draft/${contestId}`, {
-                                state: {
-                                    contestId,
-                                    contestName: contest.name,
-                                    userRoster: initialRoster, // Pass initialRoster to the Draft page
-                                },
-                            });
-                        }
                     }
+
+                    // Update the isUserRegistered state after successful registration
+                    setIsUserRegistered(true);
                 }
             });
         } else {
             // User is not authenticated
-            setMessage('You need to log in before registering for a contest.');
+            alert('You need to log in before registering for a contest.');
             navigate('/login');
         }
     };
@@ -126,7 +106,6 @@ const Lobby = () => {
         <div>
             <h1>Lobby</h1>
             <button onClick={handleCreateContest}>Create a Contest</button>
-            {message && <p>{message}</p>}
             <table>
                 <thead>
                     <tr>
@@ -152,7 +131,12 @@ const Lobby = () => {
                             <td>
                                 <button
                                     onClick={() => {
-                                        if (contest.players === contest.entries && isRegistered && contest === currentUserContest) {
+                                        const user = firebase.auth().currentUser;
+                                        const isUserRegisteredForCurrentContest = contests.some(
+                                            (c) => c.registeredUsers[user.uid] && c.id === contest.id
+                                        );
+
+                                        if (isUserRegisteredForCurrentContest && contest.players === contest.entries) {
                                             navigate(`/draft/${contest.id}`, {
                                                 state: {
                                                     contestId: contest.id,
@@ -162,9 +146,7 @@ const Lobby = () => {
                                             });
                                         }
                                     }}
-                                    disabled={
-                                        contest.players !== contest.entries || !isRegistered || contest.players < 1 || contest !== currentUserContest
-                                    }
+                                    disabled={!isUserRegistered || contest.players !== contest.entries}
                                 >
                                     Draft Now!
                                 </button>
