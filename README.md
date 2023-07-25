@@ -7,8 +7,6 @@ redirect all registered users to /draft not just the last user to fill
 synchronize the selected player and timer between multiple users in the same draft
 implement real-time communication and data synchronization between clients using firestore 
 
-fix bug where draft now is sometimes greyed out 
-
 write logic to store each users bid
 
 add $100 bankroll to user Card component

@@ -157,7 +157,7 @@ const Lobby = () => {
                                         } else if (!isUserRegisteredForCurrentContest) {
                                             alert('You are not registered for this contest. Please register before drafting.');
                                         } else if (contest.players !== contest.entries) {
-                                            alert("Draft now yet available, contest is not full.")
+                                            alert("Draft not yet available, contest is not full.")
                                         }
                                     }}
 
