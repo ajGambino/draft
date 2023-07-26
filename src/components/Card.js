@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Card = ({ user, roster }) => {
+const Card = ({ user, roster, wallet }) => {
     return (
         <div className="card">
             <img src={user.picture} alt="Profile" />
@@ -26,6 +26,7 @@ const Card = ({ user, roster }) => {
                             <p>TE: </p>
                         </>
                     )}
+                    <h2> ${user.wallet}</h2>
                 </div>
             )}
         </div>

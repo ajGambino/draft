@@ -75,6 +75,7 @@ const Lobby = () => {
                         email: user.email,
                         picture: user.photoURL,
                         roster: initialRoster,
+                        wallet: 100,
                     };
 
                     // Add the user document to the registeredUsers subcollection
